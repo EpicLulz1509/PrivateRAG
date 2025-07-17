@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>RAG Chat Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --card-bg: #f0f0f0;
+      --highlight: #007BFF;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --text-color: #ffffff;
+      --card-bg: #1e1e1e;
+      --highlight: #4dabf7;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: var(--card-bg);
+      padding: 1em;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+      transition: transform 0.3s ease;
+      transform: translateX(0);
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .main {
+      flex: 1;
+      padding: 2em;
+      overflow-y: auto;
+    }
+
+    .sidebar h3, .main h1 {
+      color: var(--highlight);
+    }
+
+    .question-link {
+      color: var(--highlight);
+      text-decoration: none;
+      display: block;
+    }
+
+    .question-link:hover {
+      text-decoration: underline;
+    }
+
+    button {
+      margin-top: 0.5em;
+      padding: 0.5em 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: var(--highlight);
+      color: white;
+      cursor: pointer;
+    }
+
+    .danger {
+      background-color: red;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.5em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1001;
+      background-color: transparent;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--highlight);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 1000;
+      }
+
+      .main {
+        padding: 1em;
+      }
+
+      body {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <div class="sidebar" id="sidebar">
+    <h3>Previous Questions</h3>
+    <form method="get">
+      <input type="text" name="search" placeholder="Search questions...">
+    </form>
+    <ul>
+      {% for convo in conversations %}
+        <li style="display: flex; justify-content: space-between; align-items: center;">
+          <a class="question-link" href="{{ url_for('view', index=loop.index0) }}" style="flex: 1;">{{ convo.question }}</a>
+          <form method="post" action="{{ url_for('delete', index=loop.index0) }}" style="margin: 0;">
+            <button title="Delete this question" style="background: none; border: none; color: red; cursor: pointer;">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <form method="post" action="{{ url_for('clear') }}">
+      <button class="danger" title="Clear all previous questions">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+    </form>
+
+    <form method="post" action="{{ url_for('clear_uploads') }}">
+      <button class="danger" title="Delete all uploaded files">
+        <i class="bi bi-folder-x"></i> Clear Uploaded Files
+      </button>
+    </form>
+
+    <a href="{{ url_for('export') }}">
+      <button title="Export your question history">
+        <i class="bi bi-download"></i> Export History
+      </button>
+    </a>
+
+    <br><br>
+    <label>
+      <input type="checkbox" onchange="toggleTheme(this.checked)"> Dark Mode
+    </label>
+  </div>
+
+  <div class="main">
+    <h1>Ask the RAG Assistant</h1>
+
+    <!-- Main query input -->
+    <form method="post" style="margin-bottom: 2em;">
+      <label><strong>Ask a Question:</strong></label>
+      <input type="text" name="query" placeholder="Enter your question...">
+      <button type="submit" title="Submit your question">
+        <i class="bi bi-send"></i> Submit
+      </button>
+    </form>
+
+    <!-- PDF Upload -->
+    <div style="margin-bottom: 2em;">
+      <h4>Upload a PDF</h4>
+      <form method="post" enctype="multipart/form-data" action="/upload">
+        <input type="file" name="file">
+        <button type="submit" title="Upload a document for analysis">
+          <i class="bi bi-upload"></i> Upload File
+        </button>
+      </form>
+    </div>
+
+    <!-- Website Scraping -->
+    <div style="margin-bottom: 2em;">
+      <h4>Scrape a Website</h4>
+      <form method="post" action="/web-upload">
+        <input type="text" name="url" placeholder="Paste website URL...">
+        <button type="submit" title="Scrape text from this website">
+          <i class="bi bi-globe"></i> Scrape Website
+        </button>
+      </form>
+    </div>
+
+    {% if response %}
+      <div class="response">
+        <h2>Answer:</h2>
+        <pre>{{ response.rag }}</pre>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function toggleTheme(isDark) {
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('hidden');
+    }
+  </script>
+
+</body>
+</html>

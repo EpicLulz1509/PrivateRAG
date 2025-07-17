@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Conversation View</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 2em;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+    }
+    a {
+      display: inline-block;
+      margin-top: 1em;
+      text-decoration: none;
+      color: #007BFF;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    pre {
+      background: #f0f0f0;
+      padding: 1em;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Question:</h2>
+    <p>{{ convo.question }}</p>
+
+    <h3>RAG Answer:</h3>
+    <pre>{{ convo.rag }}</pre>
+
+    <a href="{{ url_for('index') }}">← Back to all conversations</a>
+  </div>
+</body>
+</html>
