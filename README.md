@@ -4,7 +4,3 @@ Chroma db : docker run -d -p 8111:8000 -v chroma-data:/chromadb/data chromadb/ch
 
 ### start the app
 run the app
-
-## no acess to 127....
-chrome://net-internals/#sockets
-[Flush socket pools]
